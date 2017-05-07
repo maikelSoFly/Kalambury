@@ -66,14 +66,14 @@ public class Server implements Runnable {
         }
     }
 
-    public void sendDrawingPermission(ClientThread thread) throws IOException {
+    private void sendDrawingPermission(ClientThread thread) throws IOException {
         ObjectOutputStream oos = thread.getOos();
         oos.writeObject(new ControlMessage(2));
         oos.flush();
         thread.setRoundsActive(roundNumber);
     }
 
-    public void selectDrawingClient() throws IOException  {
+    private void selectDrawingClient() throws IOException  {
         for(ClientThread thread : clientThreadHashSet) {
             if (!thread.getClientSocket().isClosed() && thread.getRoundsActive() < roundNumber && thread != drawingClient) {
                 drawingClient = thread;
@@ -83,7 +83,7 @@ public class Server implements Runnable {
         }
     }
 
-    public boolean checkEndOfRound() {
+    private boolean checkEndOfRound() {
         for(ClientThread thread : clientThreadHashSet) {
             if(!thread.getClientSocket().isClosed() && thread.getRoundsActive() != roundNumber)
                 return false;
