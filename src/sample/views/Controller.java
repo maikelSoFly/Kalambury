@@ -147,8 +147,7 @@ public class Controller implements Initializable {
                                                 lblTurn.setText("Your turn!");
                                             }
                                         });
-                                        break;
-                                    }
+                                    } break;
                                     default:
                                         break;
                                 }

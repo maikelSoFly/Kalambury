@@ -41,6 +41,7 @@ public class Server implements Runnable {
         this.roundNumber = 1;
     }
 
+
     public void broadcast(ClientThread clientThreadFrom, CanvasPoint cp) throws IOException {
         for(ClientThread thread : clientThreadHashSet) {
             if(thread != clientThreadFrom && !thread.getClientSocket().isClosed()) {
@@ -84,9 +85,8 @@ public class Server implements Runnable {
 
     public boolean checkEndOfRound() {
         for(ClientThread thread : clientThreadHashSet) {
-            if (!thread.getClientSocket().isClosed() && thread.getRoundsActive() < roundNumber) {
-                if(thread.getRoundsActive() != roundNumber) return false;
-            }
+            if(!thread.getClientSocket().isClosed() && thread.getRoundsActive() != roundNumber)
+                return false;
         }
         return true;
     }
@@ -103,7 +103,7 @@ public class Server implements Runnable {
                 clientThreadHashSet.add(ct = new ClientThread(clientSocket, clientThreadHashSet, this));
                 System.out.println("Total clients: " +clientThreadHashSet.size());
                 ct.start();
-                
+
                 if(clientThreadHashSet.size() == 1) {
                     drawingClient = ct;
                     sendDrawingPermission(ct);
