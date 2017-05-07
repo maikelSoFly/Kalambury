@@ -45,6 +45,8 @@ public class Controller implements Initializable {
     private Label lblTurn;
     @FXML
     private TextField txtGuess;
+    @FXML
+    private Label lblGuess;
 
     private GraphicsContext gc;
     private BufferedImage bi;
@@ -56,6 +58,7 @@ public class Controller implements Initializable {
     private int amountOfPointsInLastSet;
     private int lastIndex;
     private String guess;
+    private String word;
 
     //Sockets
     final private String serverIpAddress = "192.168.0.199";
@@ -154,12 +157,23 @@ public class Controller implements Initializable {
                                             @Override
                                             public void run() {
                                                 lblTurn.setText("Your turn!");
+                                                lblGuess.setText("DRAW THIS:");
                                             }
                                         });
                                     } break;
                                     default:
                                         break;
                                 }
+                            }
+                            else if(obj instanceof String) {
+                                word = (String) obj;
+                                System.out.println(word);
+                                Platform.runLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        txtGuess.setText(word);
+                                    }
+                                });
                             }
                         }
                     } catch (IOException | ClassNotFoundException ex) {
@@ -245,6 +259,7 @@ public class Controller implements Initializable {
                 lastIndex = 0;
                 isMyTurn = false;
                 txtGuess.setDisable(false);
+                lblGuess.setText("Your guess:");
                 lblTurn.setText("Wait for your turn");
             } catch (IOException e) {
                 e.printStackTrace();
@@ -285,6 +300,7 @@ public class Controller implements Initializable {
                 @Override
                 public void run() {
                     lblTurn.setText("Wait for your turn");
+                    lblGuess.setText("Your guess:");
                     txtGuess.setDisable(false);
                 }
             });

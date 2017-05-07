@@ -14,8 +14,8 @@ import sample.models.CanvasPoint;
 import sample.models.ClientThread;
 import sample.models.ControlMessage;
 
-import java.awt.*;
 import java.io.ObjectOutputStream;
+import java.util.concurrent.ThreadLocalRandom;
 import java.net.*;
 import java.io.IOException;
 import java.util.*;
@@ -28,7 +28,8 @@ public class Server implements Runnable {
     private int roundNumber;
     private ClientThread drawingClient;
     private ObservableList<CanvasPoint> pointsArray = FXCollections.observableArrayList();
-    private String word = "dom";
+    private String word;
+    private String[] wordsArray = {"Dom", "Pies", "Szafa", "Paszport", "Java"};
 
     public static void main(String args[]) throws IOException{
         new Server(4444).run();
@@ -44,6 +45,9 @@ public class Server implements Runnable {
         this.portNumber = portNumber;
         this.clientThreadHashSet = Collections.synchronizedSet(new HashSet<ClientThread>());
         this.roundNumber = 1;
+        int randomNum = ThreadLocalRandom.current().nextInt(0, 4 + 1);
+        this.word = this.wordsArray[randomNum];
+        System.out.println(word);
     }
 
 
@@ -111,11 +115,26 @@ public class Server implements Runnable {
 
     public void checkGuess(ClientThread clientThread, String guess) throws IOException {
         System.out.println(guess +" from "+ clientThread.getClientSocket().getRemoteSocketAddress());
+        guess = guess.toLowerCase();
+        word = word.toLowerCase();
+
         if(guess.equals(word)) {
             ObjectOutputStream oos = clientThread.getOos();
             oos.writeObject(new ControlMessage(1));
             broadcast(clientThread, new ControlMessage(1));
+
+            int randomNum = ThreadLocalRandom.current().nextInt(0, 4 + 1);
+            this.word = this.wordsArray[randomNum];
+
+            System.out.println(word);
+            sendWord();
         }
+    }
+
+    private void sendWord() throws IOException {
+        ObjectOutputStream oos = drawingClient.getOos();
+        oos.writeObject(word);
+        oos.flush();
     }
 
 
@@ -134,6 +153,7 @@ public class Server implements Runnable {
                 if(clientThreadHashSet.size() == 1) {
                     drawingClient = ct;
                     sendDrawingPermission(ct);
+                    sendWord();
                 }
 
                 if(pointsArray.size() != 0) {
