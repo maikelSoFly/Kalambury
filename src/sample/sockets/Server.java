@@ -75,7 +75,7 @@ public class Server implements Runnable {
 
     public void selectClient() throws IOException  {
         for(ClientThread thread : clientThreadHashSet) {
-            if (!thread.getClientSocket().isClosed() && thread.getRoundsActive() < roundNumber) {
+            if (!thread.getClientSocket().isClosed() && thread.getRoundsActive() < roundNumber && thread != drawingClient) {
                 drawingClient = thread;
                 sendTurn(thread);
                 break;
