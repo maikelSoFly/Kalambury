@@ -39,7 +39,6 @@ public class Server implements Runnable {
         this.portNumber = portNumber;
         this.clientThreadHashSet = Collections.synchronizedSet(new HashSet<ClientThread>());
         this.roundNumber = 1;
-
     }
 
     public void broadcast(ClientThread clientThreadFrom, CanvasPoint cp) throws IOException {
@@ -62,22 +61,22 @@ public class Server implements Runnable {
         }
         if(cm.getMessage() == 1) {
             if(checkEndOfRound()) roundNumber++;
-            selectClient();
+            selectDrawingClient();
         }
     }
 
-    public void sendTurn(ClientThread thread) throws IOException {
+    public void sendDrawingPermission(ClientThread thread) throws IOException {
         ObjectOutputStream oos = thread.getOos();
         oos.writeObject(new ControlMessage(2));
         oos.flush();
         thread.setRoundsActive(roundNumber);
     }
 
-    public void selectClient() throws IOException  {
+    public void selectDrawingClient() throws IOException  {
         for(ClientThread thread : clientThreadHashSet) {
             if (!thread.getClientSocket().isClosed() && thread.getRoundsActive() < roundNumber && thread != drawingClient) {
                 drawingClient = thread;
-                sendTurn(thread);
+                sendDrawingPermission(thread);
                 break;
             }
         }
@@ -104,9 +103,10 @@ public class Server implements Runnable {
                 clientThreadHashSet.add(ct = new ClientThread(clientSocket, clientThreadHashSet, this));
                 System.out.println("Total clients: " +clientThreadHashSet.size());
                 ct.start();
+                
                 if(clientThreadHashSet.size() == 1) {
                     drawingClient = ct;
-                    sendTurn(ct);
+                    sendDrawingPermission(ct);
                 }
             } catch(IOException e) {
                 e.printStackTrace();
