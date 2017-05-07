@@ -40,7 +40,6 @@ public class ClientThread extends Thread {
     public void run() {
         try {
             while(true) {
-
                 Object obj = ois.readObject();
                 if(obj instanceof CanvasPoint) {
                     server.broadcast(this, (CanvasPoint) obj);
@@ -48,7 +47,9 @@ public class ClientThread extends Thread {
                 else if(obj instanceof ControlMessage) {
                     server.broadcast(this, (ControlMessage) obj);
                 }
-
+                else if(obj instanceof String) {
+                    server.checkGuess(this, (String) obj);
+                }
             }
         } catch (ClassNotFoundException | IOException ex) {
             ex.printStackTrace();

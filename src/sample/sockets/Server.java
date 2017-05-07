@@ -8,10 +8,13 @@ package sample.sockets;
 //
 
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import sample.models.CanvasPoint;
 import sample.models.ClientThread;
 import sample.models.ControlMessage;
 
+import java.awt.*;
 import java.io.ObjectOutputStream;
 import java.net.*;
 import java.io.IOException;
@@ -24,6 +27,8 @@ public class Server implements Runnable {
     private Set<ClientThread> clientThreadHashSet;
     private int roundNumber;
     private ClientThread drawingClient;
+    private ObservableList<CanvasPoint> pointsArray = FXCollections.observableArrayList();
+    private String word = "dom";
 
     public static void main(String args[]) throws IOException{
         new Server(4444).run();
@@ -43,6 +48,9 @@ public class Server implements Runnable {
 
 
     public void broadcast(ClientThread clientThreadFrom, CanvasPoint cp) throws IOException {
+        if (!pointsArray.contains(cp))
+            pointsArray.add(cp);
+
         for(ClientThread thread : clientThreadHashSet) {
             if(thread != clientThreadFrom && !thread.getClientSocket().isClosed()) {
                 ObjectOutputStream oos = thread.getOos();
@@ -60,7 +68,9 @@ public class Server implements Runnable {
                 oos.flush();
             }
         }
+
         if(cm.getMessage() == 1) {
+            pointsArray.clear();
             if(checkEndOfRound()) roundNumber++;
             selectDrawingClient();
         }
@@ -91,6 +101,23 @@ public class Server implements Runnable {
         return true;
     }
 
+    private void sendArrayToClient(ClientThread clientThread) throws IOException {
+        for(CanvasPoint pt : pointsArray) {
+            ObjectOutputStream oos = clientThread.getOos();
+            oos.writeObject(pt);
+            oos.flush();
+        }
+    }
+
+    public void checkGuess(ClientThread clientThread, String guess) throws IOException {
+        System.out.println(guess +" from "+ clientThread.getClientSocket().getRemoteSocketAddress());
+        if(guess.equals(word)) {
+            ObjectOutputStream oos = clientThread.getOos();
+            oos.writeObject(new ControlMessage(1));
+            broadcast(clientThread, new ControlMessage(1));
+        }
+    }
+
 
     @Override
     public void run() { //MAIN THREAD
@@ -108,10 +135,14 @@ public class Server implements Runnable {
                     drawingClient = ct;
                     sendDrawingPermission(ct);
                 }
+
+                if(pointsArray.size() != 0) {
+                    sendArrayToClient(ct);
+                }
+
             } catch(IOException e) {
                 e.printStackTrace();
             }
-
         }
     }
 }

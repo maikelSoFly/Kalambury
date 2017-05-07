@@ -13,12 +13,16 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.*;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.StrokeLineCap;
 import sample.Main;
 import sample.models.*;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.InetAddress;
@@ -39,6 +43,8 @@ public class Controller implements Initializable {
     private Label lblConnectionState;
     @FXML
     private Label lblTurn;
+    @FXML
+    private TextField txtGuess;
 
     private GraphicsContext gc;
     private BufferedImage bi;
@@ -49,9 +55,10 @@ public class Controller implements Initializable {
     private ObservableList<CanvasPoint> pointsArray = FXCollections.observableArrayList();
     private int amountOfPointsInLastSet;
     private int lastIndex;
+    private String guess;
 
     //Sockets
-    final private String serverIpAddress = "192.168.1.5";
+    final private String serverIpAddress = "192.168.0.199";
     final private short portNumber = 4444;
     private Socket clientSocket;
     private ObjectInputStream ois;
@@ -97,6 +104,7 @@ public class Controller implements Initializable {
         colorPicker.valueProperty().addListener((observable, oldValue, newValue) -> {
             color = newValue;
         });
+        this.txtGuess.setDisable(false);
     }
 
     @FXML
@@ -132,7 +140,7 @@ public class Controller implements Initializable {
                                     drawFromPointsArray();
                             } else if (obj instanceof ControlMessage) {
                                 System.out.println("Got control message");
-                                ControlMessage cm = (ControlMessage) obj; //TODO
+                                ControlMessage cm = (ControlMessage) obj;
                                 switch (cm.getMessage()) {
                                     case 0:
                                         break;
@@ -141,6 +149,7 @@ public class Controller implements Initializable {
                                         break;
                                     case 2: {
                                         isMyTurn = true;
+                                        txtGuess.setDisable(true);
                                         Platform.runLater(new Runnable() {
                                             @Override
                                             public void run() {
@@ -227,19 +236,29 @@ public class Controller implements Initializable {
    }
 
    @FXML
-   private void handleEndTurn() { //TODO
+   private void handleEndTurn() {
+        if(isConnected && isMyTurn) {
+            try {
+                oos.writeObject(new ControlMessage(1));
+                oos.flush();
+                handleClear();
+                lastIndex = 0;
+                isMyTurn = false;
+                txtGuess.setDisable(false);
+                lblTurn.setText("Wait for your turn");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+   }
 
-        try {
-            oos.writeObject(new ControlMessage(1));
+   @FXML
+   private void handleTxtGuessKeyPressed(KeyEvent key) throws IOException {
+        if (key.getCode().equals(KeyCode.ENTER) && !isMyTurn) {
+            guess = txtGuess.getText();
+            oos.writeObject(guess);
             oos.flush();
-            handleClear();
-            lastIndex = 0;
-            isMyTurn = false;
-            lblTurn.setText("Wait for your turn");
-        } catch(IOException e) {
-            e.printStackTrace();
-       }
-
+        }
    }
 
    @FXML
@@ -254,9 +273,22 @@ public class Controller implements Initializable {
 
     @FXML
     private void handleClear() {
+        txtGuess.setText("");
         pointsArray.clear();
         gc.setFill(Color.BLACK);
         gc.drawImage(SwingFXUtils.toFXImage(bi, null), 0,0 );
+
+        if(isMyTurn) {
+            lastIndex = 0;
+            isMyTurn = false;
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    lblTurn.setText("Wait for your turn");
+                    txtGuess.setDisable(false);
+                }
+            });
+        }
     }
 
     @FXML
