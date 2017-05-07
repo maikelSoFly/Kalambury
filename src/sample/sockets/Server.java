@@ -61,36 +61,38 @@ public class Server implements Runnable {
             }
         }
         if(cm.getMessage() == 1) {
+            if(checkEndOfRound()) roundNumber++;
             selectClient();
         }
     }
 
-    public void sendTurn() throws IOException {
-
-        for(ClientThread thread : clientThreadHashSet) {
-            if (!thread.getClientSocket().isClosed() && thread == drawingClient) {
-                ObjectOutputStream oos = thread.getOos();
-                oos.writeObject(new ControlMessage(2));
-                oos.flush();
-                roundNumber++;
-                thread.setRoundsActive(roundNumber);
-                break;
-            }
-        }
+    public void sendTurn(ClientThread thread) throws IOException {
+        ObjectOutputStream oos = thread.getOos();
+        oos.writeObject(new ControlMessage(2));
+        oos.flush();
+        thread.setRoundsActive(roundNumber);
     }
 
     public void selectClient() throws IOException  {
         for(ClientThread thread : clientThreadHashSet) {
             if (!thread.getClientSocket().isClosed() && thread.getRoundsActive() < roundNumber) {
                 drawingClient = thread;
-                sendTurn();
-
+                sendTurn(thread);
                 break;
             }
         }
     }
-    // 0 1 1
-    // 0 0 1
+
+    public boolean checkEndOfRound() {
+        for(ClientThread thread : clientThreadHashSet) {
+            if (!thread.getClientSocket().isClosed() && thread.getRoundsActive() < roundNumber) {
+                if(thread.getRoundsActive() != roundNumber) return false;
+            }
+        }
+        return true;
+    }
+
+
     @Override
     public void run() { //MAIN THREAD
         System.out.println("Waiting for clients");
@@ -104,7 +106,7 @@ public class Server implements Runnable {
                 ct.start();
                 if(clientThreadHashSet.size() == 1) {
                     drawingClient = ct;
-                    sendTurn();
+                    sendTurn(ct);
                 }
             } catch(IOException e) {
                 e.printStackTrace();
