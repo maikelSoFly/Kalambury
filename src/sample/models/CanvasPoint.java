@@ -49,59 +49,49 @@ public class CanvasPoint implements Serializable{
         this.isSingle = false;
     }
 
+
+
+    //GETTERS & SETTERS
     public int getX() {
         return x;
     }
-
     public void setX(double x) {
         this.x = (int)x;
     }
-
     public int getY() {
         return y;
     }
-
     public void setY(double y) {
         this.y = (int)y;
     }
-
     public int getSize() {
         return size;
     }
-
     public void setSize(int size) {
         this.size = size;
     }
-
     public Color getColor() {
         Color color = Color.rgb(this.color.getRed(), this.color.getGreen(), this.color.getBlue());
         return color;
     }
-
     public void setColor(java.awt.Color color) {
         this.color = color;
     }
-
     public boolean isBreaking() {
         return isBreaking;
     }
-
     public void setBreaking(boolean breaking) {
         isBreaking = breaking;
     }
-
     public int getAmountOfPointsInThisSet() {
         return amountOfPointsInThisSet;
     }
-
     public void setAmountOfPointsInThisSet(int amountOfPointsInThisSet) {
         this.amountOfPointsInThisSet = amountOfPointsInThisSet;
     }
-
     public boolean isSingle() {
         return isSingle;
     }
-
     public void setSingle(boolean single) {
         isSingle = single;
     }

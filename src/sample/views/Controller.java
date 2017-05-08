@@ -138,8 +138,6 @@ public class Controller implements Initializable {
                                 CanvasPoint cp = (CanvasPoint) obj;
                                 if (!pointsArray.contains(cp))
                                     pointsArray.add(cp);
-                                else System.out.println("Point Duplicate");
-                                boolean isThereEnd = false;
                                 if (cp.isBreaking()) {
                                     drawFromPointsArray();
                                     lastIndexRead = pointsArray.size()-1;
@@ -280,16 +278,6 @@ public class Controller implements Initializable {
         }
    }
 
-   @FXML
-    private void handleButtonSizeMinus() {
-       size.set(size.get() - 1);
-   }
-
-    @FXML
-    private void handleButtonSizePlus() {
-        size.set(size.get() + 1);
-    }
-
     @FXML
     private void handleClear() {
         txtGuess.setText("");
@@ -312,6 +300,16 @@ public class Controller implements Initializable {
     }
 
     @FXML
+    private void handleButtonSizeMinus() {
+       size.set(size.get() - 1);
+   }
+
+    @FXML
+    private void handleButtonSizePlus() {
+        size.set(size.get() + 1);
+    }
+
+    @FXML
     private void handleUndo() throws IndexOutOfBoundsException {
         if(pointsArray.size() > 0) {
             int pointsToRemove;
@@ -325,7 +323,6 @@ public class Controller implements Initializable {
     }
 
     private void drawFromPointsArray() {
-
         if(pointsArray.size() > 0) {
             for (int i = lastIndexRead; i < pointsArray.size(); i++) {
                 CanvasPoint point = pointsArray.get(i);
@@ -342,7 +339,6 @@ public class Controller implements Initializable {
                     gc.setFill(point.getColor());
                     gc.fillOval(point.getX(), point.getY(), point.getSize(), point.getSize());
                 }
-
             }
         } else System.out.println("Points Array is empty");
     }

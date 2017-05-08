@@ -7,15 +7,13 @@ package sample.models;
 //     Copyright © 2017 Mikołaj Stępniewski. All rights reserved.
 //
 
-// MESSAGE
-// 1 - Clear
-// 2 -
-// 3 -
-// 4 -
-
 import java.io.Serializable;
 
 public class ControlMessage implements Serializable {
+    // MESSAGE
+    // 0 - Default
+    // 1 - Clear
+    // 2 - Draw Permit
     private int message;
 
     public ControlMessage(int message) {
@@ -27,9 +25,7 @@ public class ControlMessage implements Serializable {
     public int getMessage() {
         return message;
     }
-
     public void setMessage(int message) {
         this.message = message;
     }
-
 }
