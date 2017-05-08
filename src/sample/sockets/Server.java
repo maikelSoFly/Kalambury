@@ -29,7 +29,10 @@ public class Server implements Runnable {
     private ClientThread drawingClient;
     private ObservableList<CanvasPoint> pointsArray = FXCollections.observableArrayList();
     private String word;
-    private String[] wordsArray = {"Dom", "Pies", "Szafa", "Paszport", "Java"};
+    private String[] wordsArray = {"Dom", "Pies", "Szafa", "Paszport", "Java",
+                                   "Ogień", "Malarz", "Legia", "Telewizor", "Śpiewać", "Miasto", "Narty",
+                                   "Ostry jak brzytwa", "Złota rączka", "Ikea", "Juwenalia"};
+    private int wordsArraySize = 16;
 
     public static void main(String args[]) throws IOException{
         new Server(4444).run();
@@ -45,7 +48,7 @@ public class Server implements Runnable {
         this.portNumber = portNumber;
         this.clientThreadHashSet = Collections.synchronizedSet(new HashSet<ClientThread>());
         this.roundNumber = 1;
-        int randomNum = ThreadLocalRandom.current().nextInt(0, 4 + 1);
+        int randomNum = ThreadLocalRandom.current().nextInt(0, wordsArraySize);
         this.word = this.wordsArray[randomNum];
         System.out.println(word);
     }
@@ -77,6 +80,7 @@ public class Server implements Runnable {
             pointsArray.clear();
             if(checkEndOfRound()) roundNumber++;
             selectDrawingClient();
+            sendWord();
         }
     }
 
@@ -122,16 +126,14 @@ public class Server implements Runnable {
             ObjectOutputStream oos = clientThread.getOos();
             oos.writeObject(new ControlMessage(1));
             broadcast(clientThread, new ControlMessage(1));
-
-            int randomNum = ThreadLocalRandom.current().nextInt(0, 4 + 1);
-            this.word = this.wordsArray[randomNum];
-
-            System.out.println(word);
             sendWord();
         }
     }
 
     private void sendWord() throws IOException {
+        int randomNum = ThreadLocalRandom.current().nextInt(0, wordsArraySize);
+        this.word = this.wordsArray[randomNum];
+        System.out.println(word);
         ObjectOutputStream oos = drawingClient.getOos();
         oos.writeObject(word);
         oos.flush();

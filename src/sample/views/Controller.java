@@ -4,7 +4,6 @@ import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
@@ -22,7 +21,6 @@ import javafx.scene.shape.StrokeLineCap;
 import sample.Main;
 import sample.models.*;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.InetAddress;
@@ -56,7 +54,8 @@ public class Controller implements Initializable {
     private Color color;
     private ObservableList<CanvasPoint> pointsArray = FXCollections.observableArrayList();
     private int amountOfPointsInLastSet;
-    private int lastIndex;
+    private int lastIndexWrite;
+    private int lastIndexRead;
     private String guess;
     private String word;
 
@@ -76,7 +75,8 @@ public class Controller implements Initializable {
         this.color = Color.GREEN;
         this.isConnected = false;
         this.isMyTurn = false;
-        this.lastIndex = 0;
+        this.lastIndexWrite = 0;
+        this.lastIndexRead = 0;
         this.clientSocket = null;
         this.bi = new BufferedImage(400, 400, BufferedImage.TYPE_INT_RGB);
         this.size.addListener((observable, oldValue, newValue) -> {
@@ -138,9 +138,12 @@ public class Controller implements Initializable {
                                 CanvasPoint cp = (CanvasPoint) obj;
                                 if (!pointsArray.contains(cp))
                                     pointsArray.add(cp);
-                                //else System.out.println("Point Duplicate");
-                                if (cp.isBreaking())
+                                else System.out.println("Point Duplicate");
+                                boolean isThereEnd = false;
+                                if (cp.isBreaking()) {
                                     drawFromPointsArray();
+                                    lastIndexRead = pointsArray.size()-1;
+                                }
                             } else if (obj instanceof ControlMessage) {
                                 System.out.println("Got control message");
                                 ControlMessage cm = (ControlMessage) obj;
@@ -238,14 +241,14 @@ public class Controller implements Initializable {
    private void sendPoints() {
         if(isConnected) {
             try {
-                for (int i = lastIndex; i < pointsArray.size(); i++) {
+                for (int i = lastIndexWrite +1; i < pointsArray.size(); i++) {
                     oos.writeObject(pointsArray.get(i));
                     oos.flush();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            lastIndex = pointsArray.size() - 1;
+            lastIndexWrite = pointsArray.size() - 1;
         }
    }
 
@@ -256,7 +259,8 @@ public class Controller implements Initializable {
                 oos.writeObject(new ControlMessage(1));
                 oos.flush();
                 handleClear();
-                lastIndex = 0;
+                lastIndexWrite = 0;
+                lastIndexRead = 0;
                 isMyTurn = false;
                 txtGuess.setDisable(false);
                 lblGuess.setText("Your guess:");
@@ -292,9 +296,9 @@ public class Controller implements Initializable {
         pointsArray.clear();
         gc.setFill(Color.BLACK);
         gc.drawImage(SwingFXUtils.toFXImage(bi, null), 0,0 );
-
+        lastIndexRead = 0;
         if(isMyTurn) {
-            lastIndex = 0;
+            lastIndexWrite = 0;
             isMyTurn = false;
             Platform.runLater(new Runnable() {
                 @Override
@@ -321,11 +325,10 @@ public class Controller implements Initializable {
     }
 
     private void drawFromPointsArray() {
-        gc.setFill(Color.BLACK);
-        gc.drawImage(SwingFXUtils.toFXImage(bi, null), 0,0 );
 
         if(pointsArray.size() > 0) {
-            for (CanvasPoint point : pointsArray) {
+            for (int i = lastIndexRead; i < pointsArray.size(); i++) {
+                CanvasPoint point = pointsArray.get(i);
                 if (pointsArray.indexOf(point) >= 1 && !pointsArray.get(pointsArray.indexOf(point) - 1).isBreaking()) {
 
                     gc.setStroke(point.getColor());
@@ -334,10 +337,12 @@ public class Controller implements Initializable {
                             pointsArray.get(pointsArray.indexOf(point) - 1).getY(),
                             point.getX(),
                             point.getY());
+
                 } else if(point.isSingle()) {
                     gc.setFill(point.getColor());
                     gc.fillOval(point.getX(), point.getY(), point.getSize(), point.getSize());
                 }
+
             }
         } else System.out.println("Points Array is empty");
     }
